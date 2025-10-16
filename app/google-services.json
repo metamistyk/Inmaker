@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374466043107",
+    "project_id": "in-maker",
+    "storage_bucket": "in-maker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374466043107:android:9f2568be91bcaefb0739d6",
+        "android_client_info": {
+          "package_name": "com.example.inmaker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjEbdgoPDDqIHeZTNXxYCZvKay4-v8PZY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
