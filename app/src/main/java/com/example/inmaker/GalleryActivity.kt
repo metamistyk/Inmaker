@@ -1,28 +1,37 @@
 package com.example.inmaker
 
-import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.util.*
 
 class GalleryActivity : AppCompatActivity() {
-
+    // cambios
     private lateinit var imageView: ImageView
     private lateinit var pickButton: Button
     private lateinit var uploadButton: Button
+    private lateinit var nameEditText: EditText
+    private lateinit var priceEditText: EditText
+    private lateinit var descriptionEditText: EditText
+    private var imageUri: Uri? = null
 
-    private var selectedImageUri: Uri? = null
-    private val PICK_IMAGE_REQUEST = 100
-
-    private val storageRef = FirebaseStorage.getInstance().reference
     private val db = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance().reference
+
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            imageUri = it
+            imageView.setImageURI(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,55 +40,65 @@ class GalleryActivity : AppCompatActivity() {
         imageView = findViewById(R.id.imageView)
         pickButton = findViewById(R.id.pickButton)
         uploadButton = findViewById(R.id.uploadButton)
+        nameEditText = findViewById(R.id.productNameEditText)
+        priceEditText = findViewById(R.id.productPriceEditText)
+        descriptionEditText = findViewById(R.id.productDescriptionEditText)
 
-        // Seleccionar imagen desde galería
         pickButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            startActivityForResult(intent, PICK_IMAGE_REQUEST)
+            pickImageLauncher.launch("image/*")
         }
 
-        // Subir imagen a Firebase
         uploadButton.setOnClickListener {
-            selectedImageUri?.let { uri ->
-                uploadImageToFirebase(uri)
-            } ?: Toast.makeText(this, "Selecciona una imagen primero", Toast.LENGTH_SHORT).show()
+            uploadToFirebase()
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data?.data != null) {
-            selectedImageUri = data.data
-            imageView.setImageURI(selectedImageUri)
+    private fun uploadToFirebase() {
+        val name = nameEditText.text.toString().trim()
+        val price = priceEditText.text.toString().trim()
+        val description = descriptionEditText.text.toString().trim()
+
+        if (imageUri == null || name.isEmpty() || price.isEmpty() || description.isEmpty()) {
+            Toast.makeText(this, "Completa todos los campos y selecciona una imagen", Toast.LENGTH_SHORT).show()
+            return
         }
-    }
 
-    private fun uploadImageToFirebase(uri: Uri) {
-        val fileName = "imagen_${UUID.randomUUID()}.jpg"
-        val imageRef = storageRef.child("imagenes/$fileName")
+        val progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Subiendo datos...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
 
-        imageRef.putFile(uri)
+        val fileName = "images/${UUID.randomUUID()}.jpg"
+        val imageRef = storage.child(fileName)
+
+        imageRef.putFile(imageUri!!)
             .addOnSuccessListener {
-                imageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    // Guardar datos en Firestore
-                    val data = hashMapOf(
-                        "nombre" to "Ejemplo de imagen",
-                        "descripcion" to "Imagen subida desde la galería",
-                        "url" to downloadUrl.toString(),
-                        "fecha_subida" to Date()
+                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                    val product = hashMapOf(
+                        "name" to name,
+                        "price" to price.toDoubleOrNull(),
+                        "description" to description,
+                        "imageUrl" to uri.toString(),
+                        "timestamp" to System.currentTimeMillis()
                     )
-                    db.collection("imagenes_estilizadas").add(data)
+
+                    db.collection("products")
+                        .add(product)
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Imagen subida y guardada correctamente", Toast.LENGTH_SHORT).show()
+                            progressDialog.dismiss()
+                            Toast.makeText(this, "Producto subido correctamente", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, MenuActivity::class.java))
+                            finish()
                         }
-                        .addOnFailureListener {
-                            Toast.makeText(this, "Error al guardar en Firestore", Toast.LENGTH_SHORT).show()
+                        .addOnFailureListener { e ->
+                            progressDialog.dismiss()
+                            Toast.makeText(this, "Error al guardar en Firestore: ${e.message}", Toast.LENGTH_LONG).show()
                         }
                 }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Error al subir imagen: ${it.message}", Toast.LENGTH_LONG).show()
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(this, "Error al subir imagen: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 }

@@ -21,7 +21,7 @@
         android:layout_marginTop="40dp"/>
 
     <ImageView
-        android:id="@+id/imagePreview"
+        android:id="@+id/imageView"
         android:layout_width="0dp"
         android:layout_height="300dp"
         android:scaleType="centerCrop"
@@ -38,10 +38,32 @@
         android:text="📸 Tomar foto"
         android:backgroundTint="#6200EE"
         android:textColor="#FFFFFF"
-        app:layout_constraintTop_toBottomOf="@id/imagePreview"
+        app:layout_constraintTop_toBottomOf="@id/imageView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="40dp"/>
+
+    <Button
+        android:id="@+id/stylizeButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="✨ Mejorar con IA"
+        android:backgroundTint="#03DAC5"
+        android:textColor="#000000"
+        app:layout_constraintTop_toBottomOf="@id/takePhotoButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/stylizeButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
 
     <Button
         android:id="@+id/backButton"
@@ -50,9 +72,8 @@
         android:text="Volver"
         android:textColor="#6200EE"
         android:backgroundTint="#E0E0E0"
-        app:layout_constraintTop_toBottomOf="@id/takePhotoButton"
+        app:layout_constraintTop_toBottomOf="@id/progressBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
